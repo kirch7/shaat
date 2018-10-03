@@ -1,0 +1,6 @@
+[package]
+name = "messages"
+version = "0.0.3"
+authors = ["Cássio Kirch <cassio.kirch@inf.ufrgs.br>"]
+
+[dependencies]

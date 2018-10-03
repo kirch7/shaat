@@ -1,0 +1,24 @@
+[package]
+name = "shaat"
+version = "0.0.2"
+authors = ["Cássio Kirch <cassio.kirch@inf.ufrgs.br>"]
+
+[dependencies]
+static_cache = { path = "../libstatic" }
+messages = { path = "../libmessages" }
+actix-web = { version = "0.6.14", default-features = true }
+actix = "^0.5.8"
+cookie = { version = "*", features = [ "percent-encode", "secure" ] }
+lazy_static = "*"
+serde_json = "*"
+futures = "0.1"
+log = "*"
+env_logger = "*"
+listenfd = "*"
+time = "*"
+serde = "*"
+serde_derive = "*"
+r2d2 = "*"
+diesel = { version = "*", default-features = false, features = ["sqlite", "r2d2"] }
+juniper = "*"
+rust-crypto = "*"

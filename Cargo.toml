@@ -1,0 +1,11 @@
+[workspace]
+members = [
+        "libstatic",
+        "libmessages",
+        "main",
+        ]
+
+[profile.release]
+lto = true
+
+[replace]

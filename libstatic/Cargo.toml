@@ -1,0 +1,7 @@
+[package]
+name = "static_cache"
+version = "0.0.1"
+authors = ["Cassio Kirch <cassio.kirch@inf.ufrgs.br>"]
+
+[dependencies]
+#lazy_static = "*"
