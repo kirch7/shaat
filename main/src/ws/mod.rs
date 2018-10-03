@@ -21,7 +21,9 @@ struct Connect {
     addr: Recipient<Syn, ::messajes::Message>,
 }
 
-pub fn handle_ws(req: HttpRequest<(WsChatSessionState, ::db::State, ::graphql::AppState)>) -> Result<HttpResponse, actix_web::Error> {
+pub fn handle_ws(
+    req: HttpRequest<(WsChatSessionState, ::db::State, ::graphql::AppState)>,
+) -> Result<HttpResponse, actix_web::Error> {
     let username = {
         let req = req.clone();
         match req.identity() {

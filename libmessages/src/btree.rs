@@ -43,12 +43,12 @@ where
         let (tree, last) = (self.tree.read().unwrap(), self.last_id.read().unwrap());
         let n = if n <= 0 { 32 } else { n };
 
-        let n = if n > *last { last.clone() } else { n };
+        let n = if n > *last { *last } else { n };
         let n = *last - n;
 
         let mut v = Vec::with_capacity(n as usize);
         for (key, value) in &*tree {
-            if key >= &n {
+            if *key >= n {
                 v.push(value.clone());
             }
         }

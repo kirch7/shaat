@@ -18,7 +18,7 @@ impl<T> Messages<T> {
         Messages {
             tree: OutTree::default(),
             last_inner_tree_id: Arc::new(RwLock::new(0)),
-            divisor: Arc::new(divisor as Id),
+            divisor: Arc::new(Id::from(divisor)),
         }
     }
 }
@@ -36,7 +36,7 @@ impl<T: Clone> MessageGuard for Messages<T> {
     where
         Self::Message: From<M>,
     {
-        let last = self.last_inner_tree_id.read().unwrap().clone();
+        let last = *self.last_inner_tree_id.read().unwrap();
         if last % *self.divisor == 0 {
             let mut out_tree = self.tree.write().unwrap();
             out_tree.insert(last, Arc::default());
@@ -71,7 +71,7 @@ impl<T: Clone> MessageGuard for Messages<T> {
     }
 
     fn get_latest(&self, n: Id) -> Vec<Self::Message> {
-        let latest_id = self.last_inner_tree_id.read().unwrap().clone();
+        let latest_id = *self.last_inner_tree_id.read().unwrap();
         let group_id = (latest_id / *self.divisor) * *self.divisor;
         let outer_tree = self.tree.read().unwrap();
         let mut v = Vec::with_capacity(2 * *self.divisor as usize);
@@ -80,14 +80,11 @@ impl<T: Clone> MessageGuard for Messages<T> {
         macro_rules! scan {
             ($begin:expr, $end:expr) => {
                 let begin_group_id = ($begin / *self.divisor) * *self.divisor;
-                match outer_tree.get(&begin_group_id) {
-                    Some(inner_tree) => {
-                        let inner_tree = inner_tree.read().unwrap();
-                        for id in $begin..$end {
-                            v.push(inner_tree.get(&id).unwrap().clone());
-                        }
+                if let Some(inner_tree) = outer_tree.get(&begin_group_id) {
+                    let inner_tree = inner_tree.read().unwrap();
+                    for id in $begin..$end {
+                        v.push(inner_tree.get(&id).unwrap().clone());
                     }
-                    None => {}
                 }
             };
         }

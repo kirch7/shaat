@@ -1,9 +1,9 @@
-use std::sync::Arc;
 use actix::{Actor, Addr, Handler, Message, Syn, SyncContext};
-use actix_web::{AsyncResponder, Error, FutureResponse, Json, HttpRequest, HttpResponse};
+use actix_web::{AsyncResponder, Error, FutureResponse, HttpRequest, HttpResponse, Json};
 use futures::Future;
-use juniper::http::{GraphQLRequest, graphiql::graphiql_source};
+use juniper::http::{graphiql::graphiql_source, GraphQLRequest};
 use serde_json;
+use std::sync::Arc;
 use ws::WsChatSessionState;
 
 mod schema;
@@ -26,7 +26,7 @@ pub struct GraphQLExecutor {
 
 impl GraphQLExecutor {
     pub fn new(schema: Arc<schema::Schema>) -> GraphQLExecutor {
-        GraphQLExecutor { schema: schema }
+        GraphQLExecutor { schema }
     }
 }
 
@@ -34,7 +34,9 @@ impl Actor for GraphQLExecutor {
     type Context = SyncContext<Self>;
 }
 
-pub fn graphiql(req: HttpRequest<(WsChatSessionState, ::db::State, AppState)>) -> Result<HttpResponse, Error> {
+pub fn graphiql(
+    req: HttpRequest<(WsChatSessionState, ::db::State, AppState)>,
+) -> Result<HttpResponse, Error> {
     use actix_web::HttpMessage;
 
     let host = req
@@ -49,9 +51,14 @@ pub fn graphiql(req: HttpRequest<(WsChatSessionState, ::db::State, AppState)>) -
 }
 
 pub fn graphql(
-    (req, data): (HttpRequest<(WsChatSessionState, ::db::State, ::graphql::AppState)>, Json<GraphQLData>)
+    (req, data): (
+        HttpRequest<(WsChatSessionState, ::db::State, ::graphql::AppState)>,
+        Json<GraphQLData>,
+    ),
 ) -> FutureResponse<HttpResponse> {
-    req.state().2.executor
+    req.state()
+        .2
+        .executor
         .send(data.0)
         .from_err()
         .and_then(|res| match res {

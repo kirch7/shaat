@@ -7,11 +7,13 @@ pub struct ChatServer {
 }
 
 impl ChatServer {
-    pub fn send_message(&self, message: ::messajes::Message) {
-        for (_id, tuple) in &self.sessions {
-            let recipient = &tuple.1;
-            let _ = recipient.do_send(message.clone()); //// todo: erro handling
-        }
+    pub fn send_message(&self, message: &::messajes::Message) {
+        self.sessions
+            .iter()
+            .map(|(_id, tuple)| &tuple.1)
+            .for_each(|recipient| {
+                let _ = recipient.do_send(message.clone()); //// todo: erro handling
+            });
     }
 
     pub fn get_new_id(&mut self) -> usize {
@@ -57,6 +59,6 @@ impl Handler<::messajes::Message> for ChatServer {
         message: ::messajes::Message,
         _context: &mut Context<Self>,
     ) -> Self::Result {
-        self.send_message(message);
+        self.send_message(&message);
     }
 }

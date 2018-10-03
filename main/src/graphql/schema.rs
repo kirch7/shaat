@@ -1,6 +1,6 @@
-use messages::{Id, MessageGuard};
-use juniper::{FieldError, FieldResult};
 use juniper::RootNode;
+use juniper::{FieldError, FieldResult};
+use messages::{Id, MessageGuard};
 
 #[derive(GraphQLObject)]
 #[graphql(description = "A user for shaat")]
@@ -34,7 +34,7 @@ graphql_object!(QueryRoot: () |&self| {
             )),
         }
     }
-    
+
     field message(&executor, last_n: String) -> FieldResult<Vec<Message>> {
         let last_n = last_n.parse::<Id>();
         if last_n.is_err() || last_n.clone().unwrap() < 0 {
@@ -52,7 +52,7 @@ graphql_object!(QueryRoot: () |&self| {
                 })
                 .collect();
             Ok(messages)
-        } 
+        }
     }
 });
 

@@ -1,8 +1,8 @@
 // Copyright 2018 Cássio Kirch.
 
 use super::bad_request;
-use std::collections::HashMap;
 use actix_web::{HttpRequest, HttpResponse};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 type Cache = super::static_cache::HashCache;
@@ -13,12 +13,12 @@ lazy_static! {
 }
 
 #[inline]
-fn get_html(subname: String) -> Result<Vec<u8>, String> {
-    let filename = (*STATIC_PATH).clone() + "/" + &subname;
+fn get_html(subname: &str) -> Result<Vec<u8>, String> {
+    let filename = (*STATIC_PATH).clone() + "/" + subname;
     CACHE.get(&PathBuf::from(filename))
 }
 
-pub fn handle_html(subname: String) -> HttpResponse {
+pub fn handle_html(subname: &str) -> HttpResponse {
     let content = get_html(subname);
     if content.is_ok() {
         let mime = "text/html";
@@ -28,8 +28,11 @@ pub fn handle_html(subname: String) -> HttpResponse {
     }
 }
 
-pub fn handle_insert_on_html(filename: String, insertions: &HashMap<String, String>) -> HttpResponse {
-    let content0 = get_html(filename);
+pub fn handle_insert_on_html(
+    filename: &str,
+    insertions: &HashMap<String, String>,
+) -> HttpResponse {
+    let content0 = get_html(&filename);
 
     if content0.is_ok() {
         let mime = "text/html";
@@ -51,7 +54,7 @@ pub fn handle_insert_on_html(filename: String, insertions: &HashMap<String, Stri
             } else {
                 out_content.extend(line.as_bytes());
             }
-            out_content.extend(&['\n' as u8]);
+            out_content.extend(&[b'\n']);
         }
         HttpResponse::Ok().content_type(mime).body(out_content)
     } else {
@@ -62,7 +65,7 @@ pub fn handle_insert_on_html(filename: String, insertions: &HashMap<String, Stri
 pub fn handle_static(req: HttpRequest) -> HttpResponse {
     match req.match_info().get("filename") {
         Some(filename) => {
-            let ext = filename.split(".").last();
+            let ext = filename.split('.').last();
             if let Some(ext) = ext {
                 let mime = match ext {
                     "js" => "application/javascript",
@@ -85,7 +88,7 @@ pub fn handle_static(req: HttpRequest) -> HttpResponse {
             }
         }
         None => {
-            return bad_request();
+            bad_request()
         }
     }
 }

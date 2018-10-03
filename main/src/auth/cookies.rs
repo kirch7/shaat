@@ -94,7 +94,8 @@ impl<S: 'static, T: IdentityPolicy<S>> Middleware<S> for IdentityService<T> {
     fn start(&self, req: &mut HttpRequest<S>) -> Result<Started, Error> {
         let mut req = req.clone();
 
-        let fut = self.backend
+        let fut = self
+            .backend
             .from_request(&mut req)
             .then(move |res| match res {
                 Ok(id) => {
@@ -169,7 +170,7 @@ impl CookieIdentityInner {
     fn set_cookie(&self, resp: &mut HttpResponse, id: Option<String>) -> Result<(), Error> {
         let some = id.is_some();
         {
-            let id = id.unwrap_or_else(|| String::new());
+            let id = id.unwrap_or_else(String::new);
             let mut cookie = Cookie::new(self.name.clone(), id);
             cookie.set_path(self.path.clone());
             cookie.set_secure(self.secure);

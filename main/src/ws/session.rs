@@ -16,13 +16,14 @@ impl WsChatSession {
     pub fn new(username: String) -> Self {
         WsChatSession {
             id: 0,
-            username: username,
+            username,
         }
     }
 }
 
 impl Actor for WsChatSession {
-    type Context = ws::WebsocketContext<Self, (WsChatSessionState, ::db::State, ::graphql::AppState)>;
+    type Context =
+        ws::WebsocketContext<Self, (WsChatSessionState, ::db::State, ::graphql::AppState)>;
 
     fn started(&mut self, context: &mut Self::Context) {
         let address: Addr<Syn, _> = context.address();
@@ -64,15 +65,18 @@ impl Handler<::messajes::Message> for WsChatSession {
         let color = {
             match ::users::USERS.read().unwrap().get(&message.username) {
                 Some(user) => user.color.clone(),
-                None       => "#ffffff".into(),
+                None => "#ffffff".into(),
             }
         };
-        let open = format!("<code style=\"color:{}\">{} </code>", color, message.username);
+        let open = format!(
+            "<code style=\"color:{}\">{} </code>",
+            color, message.username
+        );
         let mut m = open.into_bytes();
-        let close = "<br/>".as_bytes();
+        let close = b"<br/>";
         m.extend_from_slice(&message.message);
         m.extend_from_slice(close);
-        
+
         context.text(m);
     }
 }
@@ -87,17 +91,14 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for WsChatSession {
                 let text = text.as_bytes().to_vec();
 
                 // Registering in server memory:
-                let db = &ctx
-                    .state()
-                    .1
-                    .db;
-                
-                ::messajes::register_message(&self.username, text.clone(), db).unwrap_or(()); // todo: error handling
+                let db = &ctx.state().1.db;
+
+                ::messajes::register_message(&self.username, &text, db).unwrap_or(()); // todo: error handling
 
                 // Send to all sessions:
-                ctx.state().0.addr.do_send(::messajes::Message{
+                ctx.state().0.addr.do_send(::messajes::Message {
                     username: self.username.clone(),
-                    message:  text,
+                    message: text,
                 })
             }
             ws::Message::Binary(_) => {

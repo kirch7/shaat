@@ -26,7 +26,7 @@ extern crate time;
 use actix::{Addr, Arbiter, Syn, SyncArbiter};
 
 use actix_web::middleware::Logger;
-use actix_web::{App, HttpResponse, http::Method};
+use actix_web::{http::Method, App, HttpResponse};
 
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = get_envvar("SHAAT_ADDR").ok_or("SHAAT_ADDR must be set")?;
     let db_addr = get_envvar("SHAAT_DB").ok_or("SHAAT_DB must be set")?;
     let _ = get_envvar("SHAAT_STATIC").ok_or("SHAAT_STATIC must be set")?;
-    
+
     env_logger::init();
 
     println!("loading users");
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("loading messages");
     messajes::load(&db_addr).unwrap();
     println!("Okay");
-    
+
     println!("http://{}", addr);
 
     let sys = actix::System::new("shaat");
@@ -65,8 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Sqlite
     let db_manager = ConnectionManager::<SqliteConnection>::new(db_addr);
-    let db_pool = r2d2::Pool::builder()
-        .build(db_manager)?;
+    let db_pool = r2d2::Pool::builder().build(db_manager)?;
     let db_server = SyncArbiter::start(1, move || db::DbExecutor(db_pool.clone()));
 
     // Graphql
@@ -82,9 +81,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             db: db_server.clone(),
         };
         let graphql_state = graphql::AppState {
-            executor: graphql_addr.clone()
+            executor: graphql_addr.clone(),
         };
-        
+
         vec![
             App::new()
                 .middleware(Logger::default())
@@ -99,7 +98,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .secure(false),
                 ))
                 .resource("/ws/", |r| r.get().f(ws::handle_ws))
-                .resource("/graphql", |r| r.method(Method::POST).with(graphql::graphql))
+                .resource("/graphql", |r| {
+                    r.method(Method::POST).with(graphql::graphql)
+                })
                 .resource("/graphiql", |r| r.method(Method::GET).f(graphql::graphiql))
                 .resource("/login", |r| {
                     r.method(Method::POST).with(auth::handle_login_post);
@@ -107,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .resource("/logout", |r| r.f(auth::handle_logout))
                 .resource("/", |r| r.f(auth::handle_index))
-                .boxed(),            
+                .boxed(),
         ]
     });
 
